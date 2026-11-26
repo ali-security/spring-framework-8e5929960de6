@@ -1,0 +1,2 @@
+# Keep CR LF bytes in this fixture intact through text-mode patch transport.
+partial-boundary.multipart binary
