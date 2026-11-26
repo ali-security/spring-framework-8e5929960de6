@@ -23,9 +23,13 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.http.MediaType;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.testfixture.servlet.MockHttpServletRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * A test fixture with a test subclass of AbstractMappingContentNegotiationStrategy.
@@ -75,6 +79,29 @@ class MappingContentNegotiationStrategyTests {
 
 		assertThat(mediaTypes).hasSize(1);
 		assertThat(mediaTypes.get(0).toString()).isEqualTo("application/xml");
+	}
+
+	@Test
+	void resolveMediaTypesViaFactoryDoesNotAddMapping() throws Exception {
+		Map<String, MediaType> mapping = Collections.singletonMap("json", MediaType.APPLICATION_JSON);
+		TestMappingContentNegotiationStrategy strategy = new TestMappingContentNegotiationStrategy("xml", mapping);
+
+		assertThat(strategy.resolveMediaTypes(null)).containsExactly(MediaType.APPLICATION_XML);
+		assertThat(strategy.getMediaTypes()).containsOnlyKeys("json");
+		assertThat(strategy.getAllFileExtensions()).containsExactly("json");
+		assertThat(strategy.resolveFileExtensions(MediaType.APPLICATION_XML)).isEmpty();
+	}
+
+	@Test
+	void resolveMediaTypesInvalidKey() {
+		ParameterContentNegotiationStrategy strategy = new ParameterContentNegotiationStrategy(Collections.emptyMap());
+		strategy.setUseRegisteredExtensionsOnly(false);
+		MockHttpServletRequest servletRequest = new MockHttpServletRequest();
+		servletRequest.setParameter("format", "not.json");
+		NativeWebRequest webRequest = new ServletWebRequest(servletRequest);
+
+		assertThatThrownBy(() -> strategy.resolveMediaTypes(webRequest))
+				.isInstanceOf(HttpMediaTypeNotAcceptableException.class);
 	}
 
 

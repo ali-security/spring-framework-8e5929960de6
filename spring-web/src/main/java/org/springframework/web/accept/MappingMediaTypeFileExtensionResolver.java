@@ -78,11 +78,12 @@ public class MappingMediaTypeFileExtensionResolver implements MediaTypeFileExten
 	/**
 	 * Map an extension to a MediaType. Ignore if extension already mapped.
 	 */
-	protected void addMapping(String extension, MediaType mediaType) {
-		MediaType previous = this.mediaTypes.putIfAbsent(extension, mediaType);
+	protected void addMapping(String key, MediaType mediaType) {
+		key = key.toLowerCase(Locale.ROOT);
+		MediaType previous = this.mediaTypes.putIfAbsent(key, mediaType);
 		if (previous == null) {
-			addFileExtension(mediaType, extension);
-			this.allFileExtensions.add(extension);
+			addFileExtension(mediaType, key);
+			this.allFileExtensions.add(key);
 		}
 	}
 
